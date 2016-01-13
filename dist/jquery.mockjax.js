@@ -3,7 +3,7 @@
  * 
  * Version: 2.0.1
  * Home: https://github.com/jakerella/jquery-mockjax
- * Copyright (c) 2015 Jordan Kasper, formerly appendTo;
+ * Copyright (c) 2016 Jordan Kasper, formerly appendTo;
  * NOTE: This repository was taken over by Jordan Kasper (@jakerella) October, 2014
  * 
  * Dual licensed under the MIT or GPL licenses.
@@ -595,8 +595,8 @@
 			mockHandler.cache = requestSettings.cache;
 			mockHandler.timeout = requestSettings.timeout;
 			mockHandler.global = requestSettings.global;
-			
-			// hack to mock cross domain requests, per https://github.com/appendto/jquery-mockjax/issues/136
+
+			// hack to mock GET cross domain requests, per https://github.com/appendto/jquery-mockjax/issues/136
 			origSettings.crossDomain = false;
 
 			// In the case of a timeout, we just need to ensure
@@ -681,6 +681,27 @@
 		origSettings.urlParams = paramValues;
 	}
 
+	/**
+	 * Clears handlers that mock given url
+	 * @param url
+	 * @returns {Array}
+	 */
+	function clearByUrl(url) {
+		var i, len,
+			handler,
+			results = [],
+			match=url instanceof RegExp ?
+				function(testUrl) { return url.test(testUrl); } :
+				function(testUrl) { return url === testUrl; };
+		for (i=0, len=mockHandlers.length; i<len; i++) {
+			handler = mockHandlers[i];
+			if (!match(handler.url)) {
+				results.push(handler);
+			}
+		}
+		return results;
+	}
+
 
 	// Public
 
@@ -742,7 +763,9 @@
 		return i;
 	};
 	$.mockjax.clear = function(i) {
-		if ( i || i === 0 ) {
+		if ( typeof i === 'string' || i instanceof RegExp) {
+			mockHandlers = clearByUrl(i);
+		} else if ( i || i === 0 ) {
 			mockHandlers[i] = null;
 		} else {
 			mockHandlers = [];
